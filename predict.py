@@ -78,7 +78,7 @@ def mask_to_image(mask: np.ndarray, mask_values):
 
 if __name__ == '__main__':
     args = get_args()
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    #logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
     in_files = args.input
     out_files = get_output_filenames(args)
@@ -86,18 +86,18 @@ if __name__ == '__main__':
     net = UNet(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f'Loading model {args.model}')
-    logging.info(f'Using device {device}')
+    #logging.info(f'Loading model {args.model}')
+    #logging.info(f'Using device {device}')
 
     net.to(device=device)
     state_dict = torch.load(args.model, map_location=device)
     mask_values = state_dict.pop('mask_values', [0, 1])
     net.load_state_dict(state_dict)
 
-    logging.info('Model loaded!')
+    #logging.info('Model loaded!')
 
     for i, filename in enumerate(in_files):
-        logging.info(f'Predicting image {filename} ...')
+        #logging.info(f'Predicting image {filename} ...')
         img = Image.open(filename)
 
         mask = predict_img(net=net,
@@ -110,8 +110,8 @@ if __name__ == '__main__':
             out_filename = out_files[i]
             result = mask_to_image(mask, mask_values)
             result.save(out_filename)
-            logging.info(f'Mask saved to {out_filename}')
+            #logging.info(f'Mask saved to {out_filename}')
 
         if args.viz:
-            logging.info(f'Visualizing results for image {filename}, close to continue...')
+            #logging.info(f'Visualizing results for image {filename}, close to continue...')
             plot_img_and_mask(img, mask)

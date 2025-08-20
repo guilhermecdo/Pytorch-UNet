@@ -12,20 +12,11 @@ from pathlib import Path
 from torch import optim
 from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
-
 import wandb
 from evaluate import evaluate
 from unet import UNet
 from utils.data_loading import BasicDataset, CarvanaDataset
 from utils.dice_score import dice_loss
-
-dir_img = Path('/media/guilherme/SSD/unet-data/imgs-pitch/')
-dir_mask = Path('/media/guilherme/SSD/unet-data/masks-pitch/')
-dir_checkpoint = Path('/media/guilherme/SSD/unet-data/checkpoints-pitch/')
-
-#dir_img = Path('/media/guilherme/SSD/coverage-mission-1-data/UNET/imgs/')
-#dir_mask = Path('/media/guilherme/SSD/coverage-mission-1-data/UNET/masks/')
-#dir_checkpoint = Path('/media/guilherme/SSD/coverage-mission-1-data/UNET/checkpoints/')
 
 def train_model(
         model,
@@ -58,11 +49,11 @@ def train_model(
     val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     # (Initialize logging)
-    experiment = wandb.init(project='U-Net', resume='allow', anonymous='must')
-    experiment.config.update(
-        dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
-             val_percent=val_percent, save_checkpoint=save_checkpoint, img_scale=img_scale, amp=amp)
-    )
+    # experiment = wandb.init(project='U-Net', resume='allow', anonymous='must')
+    # experiment.config.update(
+    #     dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
+    #          val_percent=val_percent, save_checkpoint=save_checkpoint, img_scale=img_scale, amp=amp)
+    # )
 
     logging.info(f'''Starting training:
         Epochs:          -------+
@@ -125,11 +116,11 @@ def train_model(
                 pbar.update(images.shape[0])
                 global_step += 1
                 epoch_loss += loss.item()
-                experiment.log({
-                    'train loss': loss.item(),
-                    'step': global_step,
-                    'epoch': epoch
-                })
+                # experiment.log({
+                #     'train loss': loss.item(),
+                #     'step': global_step,
+                #     'epoch': epoch
+                # })
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
                 # Evaluation round
@@ -148,21 +139,21 @@ def train_model(
                         scheduler.step(val_score)
 
                         logging.info('Validation Dice score: {}'.format(val_score))
-                        try:
-                            experiment.log({
-                                'learning rate': optimizer.param_groups[0]['lr'],
-                                'validation Dice': val_score,
-                                'images': wandb.Image(images[0].cpu()),
-                                'masks': {
-                                    'true': wandb.Image(true_masks[0].float().cpu()),
-                                    'pred': wandb.Image(masks_pred.argmax(dim=1)[0].float().cpu()),
-                                },
-                                'step': global_step,
-                                'epoch': epoch,
-                                **histograms
-                            })
-                        except:
-                            pass
+                        # try:
+                        #     experiment.log({
+                        #         'learning rate': optimizer.param_groups[0]['lr'],
+                        #         'validation Dice': val_score,
+                        #         'images': wandb.Image(images[0].cpu()),
+                        #         'masks': {
+                        #             'true': wandb.Image(true_masks[0].float().cpu()),
+                        #             'pred': wandb.Image(masks_pred.argmax(dim=1)[0].float().cpu()),
+                        #         },
+                        #         'step': global_step,
+                        #         'epoch': epoch,
+                        #         **histograms
+                        #     })
+                        # except:
+                        #     pass
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
@@ -174,9 +165,9 @@ def train_model(
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
-    parser.add_argument('--epochs', '-e', metavar='E', type=int, default=80, help='Number of epochs')
+    parser.add_argument('--epochs', '-e', metavar='E', type=int, default=100, help='Number of epochs')
     parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
-    parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-4,
+    parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-5,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
     parser.add_argument('--scale', '-s', type=float, default=1, help='Downscaling factor of the images')
@@ -185,12 +176,16 @@ def get_args():
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--classes', '-c', type=int, default=20, help='Number of classes')
+    parser.add_argument('--directory', '-d', type=str, default="Data/", help='The path to the data and checkpoints directory')
 
     return parser.parse_args()
 
-
 if __name__ == '__main__':
     args = get_args()
+
+    dir_img = Path(f'{args.directory}imgs/')
+    dir_mask = Path(f'{args.directory}masks/')
+    dir_checkpoint = Path(f'{args.directory}checkpoints/')
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
