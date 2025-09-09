@@ -1,10 +1,11 @@
 import os
 import tqdm
 
-image_folder_path=f"/home/guilherme/Documents/SEE-Dataset/SEE-Real-Data/multi-view/imgs_filter/"
-image_folder_output=f"/home/guilherme/Documents/SEE-Dataset/SEE-Real-Data/multi-view/imgs_combined_multiview/"
+image_folder_path=f"/home/guilherme/Documents/SEE-Dataset/SEE-Real-Data/single-view/imgs_filter/"
+#image_folder_output=f"/home/guilherme/Documents/SEE-Dataset/SEE-Real-Data/multi-view/imgs_combined_multiview/"
+image_folder_output=f"/home/guilherme/Documents/SEE-Dataset/SEE-Real-Data/single-view/imgs_elevateNET/"
 
-model=f"/media/guilherme/SSD/unet-data/SEE-Combined-Data/checkpoints/combined_withbase.pth"
+model=f"elevatenet.pth"
 
 if not os.path.isdir(image_folder_path):
     print(f"Error: The folder at '{image_folder_path}' does not exist.")
